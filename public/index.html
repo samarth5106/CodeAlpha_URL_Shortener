@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickLink | URL Shortener & Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen p-4 md:p-8 flex flex-col items-center justify-center gap-6">
+
+    <div class="max-w-2xl w-full bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-6 space-y-6">
+        
+        <div class="flex justify-center border-b border-slate-700 pb-4 gap-4">
+            <button id="showShortener" class="px-4 py-2 text-sm font-semibold text-blue-400 border-b-2 border-blue-400 focus:outline-none cursor-pointer">URL Shortener</button>
+            <button id="showAnalytics" class="px-4 py-2 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-200 focus:outline-none cursor-pointer">Track Analytics</button>
+        </div>
+
+        <div id="shortenerView" class="space-y-6">
+            <div class="text-center">
+                <h1 class="text-3xl font-extrabold text-blue-400">QuickLink</h1>
+                <p class="text-slate-400 mt-2 text-sm">Shorten your long URLs instantly</p>
+            </div>
+
+            <form id="shortenForm" class="space-y-4">
+                <div>
+                    <label for="urlInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Enter Long URL</label>
+                    <input type="url" id="urlInput" placeholder="https://example.com/very-long-link" required
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                </div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg py-3 transition shadow-md hover:shadow-blue-500/20 cursor-pointer">
+                    Shorten URL
+                </button>
+            </form>
+
+            <div id="resultCard" class="hidden bg-slate-900 border border-slate-700 rounded-lg p-4 space-y-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-green-400">Your Shortened Link:</span>
+                <div class="flex items-center justify-between gap-2 bg-slate-850 p-2 rounded border border-slate-750">
+                    <a id="shortenedUrl" href="#" target="_blank" class="text-blue-400 truncate font-medium hover:underline"></a>
+                    <button id="copyBtn" class="bg-slate-700 hover:bg-slate-600 text-xs px-3 py-1.5 rounded text-slate-200 transition cursor-pointer">Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="analyticsView" class="hidden space-y-6">
+            <div class="text-center">
+                <h1 class="text-3xl font-extrabold text-indigo-400">Link Analytics</h1>
+                <p class="text-slate-400 mt-2 text-sm">Enter a short ID to track performance data</p>
+            </div>
+
+            <div class="flex gap-2">
+                <input type="text" id="analyticsIdInput" placeholder="Enter Short ID (e.g., b3X7a9)" 
+                    class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                <button id="fetchAnalyticsBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg px-6 py-3 transition cursor-pointer">Track</button>
+            </div>
+
+            <div id="analyticsDashboard" class="hidden space-y-4">
+                <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 uppercase">Total Link Clicks:</span>
+                    <span id="totalClicksBadge" class="text-3xl font-black text-indigo-400">0</span>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950 text-slate-400 text-xs font-bold uppercase tracking-wider border-b border-slate-700">
+                                <th class="p-3">Click Number</th>
+                                <th class="p-3">Timestamp (Date & Time)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analyticsTableBody" class="text-sm text-slate-300 divider-y divide-slate-800">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Tab switching view architecture
+        const showShortener = document.getElementById('showShortener');
+        const showAnalytics = document.getElementById('showAnalytics');
+        const shortenerView = document.getElementById('shortenerView');
+        const analyticsView = document.getElementById('analyticsView');
+
+        showShortener.addEventListener('click', () => {
+            shortenerView.classList.remove('hidden');
+            analyticsView.classList.add('hidden');
+            showShortener.className = "px-4 py-2 text-sm font-semibold text-blue-400 border-b-2 border-blue-400 focus:outline-none cursor-pointer";
+            showAnalytics.className = "px-4 py-2 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-200 focus:outline-none cursor-pointer";
+        });
+
+        showAnalytics.addEventListener('click', () => {
+            analyticsView.classList.remove('hidden');
+            shortenerView.classList.add('hidden');
+            showAnalytics.className = "px-4 py-2 text-sm font-semibold text-indigo-400 border-b-2 border-indigo-400 focus:outline-none cursor-pointer";
+            showShortener.className = "px-4 py-2 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-200 focus:outline-none cursor-pointer";
+        });
+
+        // Shortener Logic
+        const form = document.getElementById('shortenForm');
+        const urlInput = document.getElementById('urlInput');
+        const resultCard = document.getElementById('resultCard');
+        const shortenedUrl = document.getElementById('shortenedUrl');
+        const copyBtn = document.getElementById('copyBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch('/url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ redirectURL: urlInput.value })
+                });
+                const data = await response.json();
+                if (response.ok && data.id) {
+                    const fullShortUrl = `${window.location.origin}/${data.id}`;
+                    shortenedUrl.href = fullShortUrl;
+                    shortenedUrl.textContent = fullShortUrl;
+                    resultCard.classList.remove('hidden');
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to shorten URL'));
+                }
+            } catch (err) {
+                alert('An error occurred.');
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(shortenedUrl.textContent);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+        });
+
+        // Analytics Live Tracking Fetch Logic
+        const fetchAnalyticsBtn = document.getElementById('fetchAnalyticsBtn');
+        const analyticsIdInput = document.getElementById('analyticsIdInput');
+        const analyticsDashboard = document.getElementById('analyticsDashboard');
+        const totalClicksBadge = document.getElementById('totalClicksBadge');
+        const analyticsTableBody = document.getElementById('analyticsTableBody');
+
+        fetchAnalyticsBtn.addEventListener('click', async () => {
+            const shortId = analyticsIdInput.value.trim();
+            if (!shortId) return alert('Please enter a short ID');
+
+            try {
+                // Hits your custom handleGetAnalytics endpoint!
+                const response = await fetch(`/url/analytics/${shortId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.error || 'Analytics not found');
+                    analyticsDashboard.classList.add('hidden');
+                    return;
+                }
+
+                totalClicksBadge.textContent = data.totalClicks;
+                analyticsTableBody.innerHTML = '';
+
+                if (data.analytics.length === 0) {
+                    analyticsTableBody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-slate-500">No clicks tracked yet. Try visiting the short link!</td></tr>`;
+                } else {
+                    // Convert raw numeric millisecond timestamps into readable format
+                    data.analytics.forEach((click, index) => {
+                        const clickDate = new Date(click.timestamp).toLocaleString();
+                        const row = `
+                            <tr class="border-b border-slate-800 hover:bg-slate-750/50 transition">
+                                <td class="p-3 font-bold text-slate-400">#${index + 1}</td>
+                                <td class="p-3 text-slate-200">${clickDate}</td>
+                            </tr>
+                        `;
+                        analyticsTableBody.innerHTML += row;
+                    });
+                }
+                analyticsDashboard.classList.remove('hidden');
+
+            } catch (err) {
+                console.error(err);
+                alert('Failed to load analytics.');
+            }
+        });
+    </script>
+</body>
+</html>
