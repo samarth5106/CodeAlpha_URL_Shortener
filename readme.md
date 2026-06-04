@@ -37,12 +37,3 @@ A lightweight, modern, full-stack URL shortener application built using **Node.j
 | **GET** | `/:shortId` | Looks up short ID, appends a click timestamp, and redirects | `302 Redirect` to destination URL |
 
 ---
-
-## ⚙️ Local Installation & Setup Guide
-
-Follow these steps to clone, configure, and spin up the application on your local workstation:
-
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/samarth5106/URL_Shortener.git](https://github.com/samarth5106/URL_Shortener.git)
-cd URL_Shortener
